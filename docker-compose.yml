@@ -1,0 +1,73 @@
+services:
+  web:
+    hostname: djangobe
+    build: ./chaM3Leon-be
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./chaM3Leon-be:/app
+      - ./chaM3Leon-be/logs:/app/logs
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./chaM3Leon-be/.env
+    depends_on:
+      - db
+      - keycloak
+
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=cham3leon_db
+      - POSTGRES_USER=cham3leon_user
+      - POSTGRES_PASSWORD=cham3leon_password
+
+
+  chameleon-fe:
+    build: ./chaM3Leon-fe
+    ports:
+      - "3000:80"
+    container_name: chameleon-frontend
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
+    ports:
+      - "8082:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak-theme:/opt/keycloak/themes  
+    restart: unless-stopped
+  
+  ml_runner:
+    build:
+      context: ./prova_ml_runner/ml_runner
+      dockerfile: Dockerfile
+    hostname: ml_runner
+    ports:
+      - "8888:8888"
+    environment:
+      - USERNAME=username
+      - METAFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_HOST=mlflow
+      - MLFLOW_PORT=5001
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+    volumes:
+      - ./prova_ml_runner/ml_runner/projects:/app/projects
+      - ./prova_ml_runner/ml_runner/workflows:/app/workflows
+      - ./prova_ml_runner/ml_runner/configs:/app/configs
+      - ./prova_ml_runner/ml_runner/models:/app/models
+      - ./prova_ml_runner/ml_runner/main.py:/app/main.py
+      - ./prova_ml_runner/ml_runner/environment.yml:/app/environment.yml
+      - ./prova_ml_runner/ml_runner/update.sh:/app/update.sh
+
+volumes:
+  postgres_data:
+  keycloak_data:

@@ -1,0 +1,43 @@
+{
+  "imports": [
+    "os",
+    "sys",
+    "torch",
+    "mlflow",
+    {
+      "from": "tensorflow",
+      "elements": [
+        "keras"
+      ]
+    }
+  ],
+  "class": {
+    "name": "ml_workflow",
+    "steps": [
+      {
+        "name": "Start",
+        "next": "test"
+      },
+      {
+        "name": "End"
+      },
+      {
+        "name": "train_test_split",
+        "next": "End"
+      },
+      {
+        "name": "test",
+        "decorators": [
+          {
+            "name": "test",
+            "parameters": {
+              "test": "\"test\"",
+              "test2": "2"
+            }
+          }
+        ],
+        "next": "train_test_split"
+      }
+    ]
+  }
+}
